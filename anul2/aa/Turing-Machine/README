@@ -1,0 +1,123 @@
+
+PLACINTA ALEXANDRU, 324CB, fisier README
+
+
+	1. TASK 1:
+
+
+			Pentru realizarea task-ului 1 am ales sa implementez masina Turing sub forma de graf, cu liste de adiacenta, unde fiecare stare reprezinta cate un nod din graf, iar costul de a ajunge dintr-un nod in altul este caracterul 			citit pe banda. Am creat structura "Tranzitie" care memoreaza o tranziti, fiind compusa din caracterul de scris pe banda, starea urmatoare si modificare pozitiei capului de citire, daca este necesar. 
+			Pe langa aceasta structura am mai creat si tipul de celula din lista care contine tranzitia pe care o efectueaza si caracterul pe care care il citeste de pe banda pe pentru a efectua acea tranzitie.
+			Am calculat numarul maxim pe care il poarta o stare, deoarece acestea pot fi date in orice ordine, si am alocat numarul "maxim + 1" de vectori de pointeri catre acele liste, de la lista "0" pana la lista de pe pozitia 
+		"maxim".
+			
+		
+			Functia "Tranzitie *creareTranzitie( string stareUrmatoare, char caracterScris, char deplasare )":
+
+				Creaza un pointer la o structura de tip "Tranzitie" cu parametrii primiti mai sus care descriu miscarile facute de masina Turing in acea tranzitie.
+
+
+			Functia "Celula *alocCelula( string stareUrmatoare, char caracterScris, char deplasare, char caracterCitit )":
+
+				Creaza un pointer la structura de tip "Celula" dintr-o lista simplu inlantuita de adiacenta, aceasta continand tranzitia efectuata si caracterul care trebuie citit pentru a efectua acea tranzitie.
+
+
+			Functia "void adaugaElementLista( ALista lista, Celula *celula )":
+
+				Adauga un element in lista de adiacenta, la finalul acesteia, deoarece ordinea nu este importanta ci doar ca toate tranzitiile dintr-o stare sa se gaseasca in acea lista, iar cel mai simplu mod era sa introduc
+			la final, nefiind preocupat de ordinea elementelor din lista.
+
+
+			Functia "void distrugeCelula( Celula **celula )":
+
+				Functia dezaloca spatiul pentru o structura de tip "Celula" si face ca pointer-ul ce indica catre acea zona de memorie sa indice acum catre NULL.
+
+
+			Functia "void distrugereLista( ALista lista )":
+
+				Functia primeste ca parametri adresa unei liste si elibereaza spatiul ocupat de aceasta, folosind functia descrisa mai sus care elibereaza spatiul ocupat de fiecare celula din lista.
+				La final pointer-ul ce indica catre inceputul listei va indica catre NULL.
+
+
+			Functia "Graf *initGraf( int nrStari )":
+
+
+				Functia initializeaza un graf cu numarul de stari din lista de parametri.
+				Pentru acest lucru am alocat memorie pentru o structura de tip "Graf" si fac un pointer sa indice catre acea zona de memorie, verific daca alocarea a avut loc si aloc dupa cele "nrStari" liste adiacenta, cate o lista
+			pentru fiecare stare, care initial vor indica catre NULL, liste vide.
+				La final returnez pointer-ul care indica catre acea zona de memorie.
+
+
+			Functia "void distrugereGraf( AGraf *graf )":
+
+
+				Functia primeste adresa unei structuri de tip "Graf" si eliereaza spatiul folosit de aceasta. Mai intai eliberez listele pe rand cu functia de care distruge listele, iar la final eliberz zona de memorie si fac
+			ca pointer-ul care indica initial catre acea zona de meorie sa indice acum catre NULL.
+
+
+			Functia "Graf *umplereGraf( char const *numeFisierIntrare, string **stariFinale, int &nrStariFinale, string &stareInitiala )":
+
+			
+				Functia primeste ca parametrii un pointer constant de caractere, adresa unui pointer de stringuri in care retin starile finale, o referinta la numarul starilor finale si o referinta catre starea finala.
+				Aceasta functia adauga informatii in graf din fiesrul de intrare.
+				Pentru aceste lucru folsoesc un fisier de intrare din care citesc numarul de stari totale, aflu numarul "n" din fiecare stare "Sn" si intializez un graf cu un numar cu 1 mai mare decat acel "maxim".
+				Dupa ce am initilizat graful, citesc din fiser linie cu linie starile finale, starea intiala, si tranzitiile, iar pentru fiecare tranzitie creez o celula noua si o introduc in lista "n" aferenta starii "Sn".
+				Am ales sa gasesc acel numar "maxim", deoarece am vrut sa evit urmatorul caz: am de citit 3 stari: S0, S100 si S34 si am vrut sa stiu exact cati pointeri sa am in vectorul de pointeri catre fiecare lista de adiacenta.
+				La final inchid fiserul deschis pentru citire si returnez graful cu datele necesare.
+
+
+			Functia "string citireBanda( char const *numeFisierIntrareBanda )":	 
+
+				Functia citeste din fiserul al carui nume e dat ca parametru banda si returneaza string-ul ce o contine.
+
+
+			Functia "bool stareFinala( string stareCurenta, string *stariFinale, int nrStariFinale )":
+
+				Functia returneaza o valoare booleana true( daca sunt in stare finala ) si false( daca nu ).
+				Pentru acest lucru parcurg vectorul de string-uri ce contin starile finale, iar daca am gasit o egalitate returnez "true", la final returnez "false".
+
+
+			Functia "void functieDelta( string &banda, string &stareCurenta, string *stariFinale, int nrStariFinale, Graf *graf, unsigned int &pozitieCapCitire )":
+
+				Functia primeste ca parametri o referinta la banda, o referinta la starea curenta, un pointer de catre starile finale, numarul de stari finale, un pointer la o structura de tip "Graf" si pozitia capului de citire.
+				Aceasta functie efectueaza tranzitiile masinii Turing cat timp nu am ajuns in starea finala.
+				Pentru a asigura o lungime infinta la dreapta a benzii, de fiecare data cand ajung pe ultima pozitie din string-ul ce retine banda ai adaug un "#" la finalul benzii.
+				Pentru efectuarea tarnzitiilor ma duc in lista aferenta starii curente si citesc fiecare celula cat timp campul "carcterCitit" este diferit de caracterul de pe pozitia capului de citire.
+				Daca am ajuns la finalul listei innseamna ca acea tranzitie nu e defintia si modifica banda asfel incat sa afiseze mesajul de agatare al masinii si opresc procesul.
+				Daca am citit o tranzitie, schimb starea curenta, mut capul de citire, daca e necesar, si scriu pe banda caracterul care trebuie. Mutarea capului de citire la stanga, respectiv la dreapta, se face prin decrementarea, 
+			respectiv incrementarea acestuia.
+
+
+			Functia "void start( char const *numeFisierIntrare, char const *numeFisierIesire, char const *numeFisierIntrareBanda )":
+
+				Functia primeste ca parametri 3 pointeri constanti de caracter ce reprezinta numele celor 3 fisiere, 2 de intrare si 1 de iesire, construieste graful cu datele masinii Turing si efectueaza tranzitiile specificate de 			functia delta a masinii.
+				Pentru acest lucru am folsoit de fisiere de intrare si functiile descrise mai sus si am scris in fiserul de iesire, iar la final inchid fisierele deschise.
+
+
+
+		2. TASK 2:
+
+
+				Pentru adunarea celor 2 numere binare am mai folosit inca 3 caractere auxiliare, "S"( indica spatiul dintre cele 2 numere), "C"( indica faptul ca am bit de carry) si "N"( indica faptul ca nu am bit de carry).
+				Carcetrul "S" se afla intre cele 2 numere, iar carcterele "C"/"N" ( depinde daca am bit de carry sau nu) la finalul numarului al doilea.
+				Rezultatul il stochez pe banda, dar dupa caracterul de carry/ non-carry.
+				Adunarea pe care am implmentat-o pentru acest task este una bit cu bit, adun bitii de pe pozitiile corespunzatoare si scriu "#" pe pozitiile in care erau acele caractere, iar in functie de rezultatul adunarii, modific
+			caracterul care indica carry de la finalul numarului al doilea si scriu la finalul numarului al 3 lea, la primul "#" pe care il intalnesc cand parcurg caracterele din al 3 lea numar.
+				Am gandit adunarea celor 2 numere in 3 pasi: adaug cele 2 caractere auxiliare( inlocuiesc "#" dintre cele 2 numere cu "S") si adaug la finalul celui de-al doilea numar caracterul de carry, initial setat pe "N", deoarece
+			nu am bit de carry in aceasta etapa, adunarea propriu-zisa a celor 2 numere si curatarea benzii pentru ca la final sa aiba numai caractere de tip "#" si rezultatul propriu-zis.
+				Pentru adunarea propriu-zisa am considerat 4 cazuri:
+						a) cand am 0 cu 0 si scriu 0 daca nu am bit de carry, iar daca am bit de carry il modific in non-carry si scriu 1 la finalul numarului rezultat.
+						b) cand am 1 cu 0 si scriu 1 daca nu am bit de carry, iar daca am bit de carry nu il modific si scriu 0 la finalul numarului rezultat.
+						c) cand am 0 cu 1 care este ca si cazul "b)".
+						d) cand am 1 cu 1 caz in care bitul de carry va fi setat pe carry, iar daca acesta a fost setat de mai devreme atunci scriu 1, iar daca nu a fost setat mai devreme scriu 0. In acest caz caracterul de carry 							   ramane setat pe "C" oricum.
+				Adun bitii de pe pozitiile corespunzatoare.
+				Daca primul numar se termina, caracterul "S" contine numai "#" inaintea sa, vad ce caracter citesc din al doilea numar si ma pliez pe cele 4 cazuri descrise mai sus.
+				Daca al doilea numar se termina, daca dupa caracterul "S" citesc numai "#" si dau de caracterul de carry, vad ce caracter citesc din primul numar si ma pliez pe cele 4 cazuri descrise mai sus.
+				Masina intra in procesul de curatare in momentul in care ambele numere s-a terminat, dupa primul inainte de "S" se afla numai "#", iar caracterul de carry este "N", nu mai am bit de carry, si inaintea sa sunt doar "#".
+				Procesul de curatare se termina cand am citit caracterul "S", caz in care scriu "#" peste el si ma duc in starea finala.
+				Dupa efectuarea unei adunari de pe o pozitia a bitilor corespunzatori, revin in starea din care incep sa citesc un caracter din primul numar. Acest lucru il realizez citind si mutand capul de citire la stanga pana dau de 				caracterul "S" dupa care trec intr-o alta stare din care citesc si mut capul de citire tot la stanga pana cand am dat de "#" caz in care mut capul de citire la dreapta. Aceasta procedura se face fara a modifica banda. 
+							
+				
+			 
+								
+
+

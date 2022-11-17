@@ -1,0 +1,133 @@
+
+	PLACINTA ALEXANDRU, 324CB, FISIER README
+
+	
+	Pentru inceput, extrag cei 3 parametrii de pe stiva, numarul 1, numarul 2 si operatia.
+	Pentru a vedea ce operatie trebuie sa efectuez, compar primul caracter din al 3 lea parametru al functiei cu valoarea codului ascii pe
+care o au caracterele: "|"( 124), "&"( 38), "<"( 60), ">"( 62), "+"( 43) si "*"( 42).
+	Daca are loc una din egalitatile de mai sus controlul programului avanseaza la unul din label-urile aferente operatiei care trebuie
+executate, altfel se iese din functie printr-un label plasat inaintea instructiunii "leave", label-ul "afara".
+	
+
+1. Implementarea operatiei "or" pe biti:
+
+	Pentru aceasta operatie, fiind asigurat din constrangerile temei ca exista suficient spatiu pentru reprezentarea rezultatului in primul
+numar am efectuat operatia de "or" logic pe octet cu octet, cat timp aveam octeti liberi in cel de-al doilea parametr.
+	Daca al 2 lea parametru era mai mare decat primul, octetii care depaseai primul numaru erau 0 si nu aveam nicio interventie de facut,
+deoarece operatia era valida.
+	Pentru a parcurge octetii celui de-al 2 lea parametru am incarcat in registrul ecx, valoarea 0, iar la fiecare iteratie comparam valoarea
+din acel registru cu nuamarul de octeti pe care ii avea cel de-al 2 lea parametru,
+	Daca acele 2 valori erau egale, am parcurs toti octetii numarului 2.
+	La final, am verificat daca al 2 lea numar era reprezentat pe mai multi octeti decat primul, caz in care trbuia sa ajustez, sa maresc,
+demensiunea rezultatului.
+
+
+2. Implementarea operatiei "and":
+
+	Pentru aceasta operatie fac aceleasi operatii, cu exceptia faptului ca fac "and" octet cu octet, iar la final redimensionez.
+	Parcurg octetii celui de-al 2 lea nuamr si efectuez operatia de "si" logic octet cu octet, iar la fina verific dimensiunile celor numere.
+	Daca dimensiunea primul este cel mult la fel de mare ca dimensiunea celui de-al 2 lea, atunci nu redimensionez rezultatul.
+	Daca primul numaru are mai multi octeti decat decat cel de-al 2 lea, atunci diemnsiunea rezultatului va deveni dimensiunea numarului 2,
+deoarece am octeti care sunt 0 si trebuie ca acestia sa fie scosi din reprezentarea numarului.
+
+
+3. Implementarea shiftarii la stanga cu "n" pozitii:
+
+	Pentru implementarea shiftarii la stanga cu "n" pozitii shiftez de "n" ori cu cate o pozitie la stanga fiecare octet al numarului.
+	Pentru a contoriza de cate ori am shiftat la stanga numraul am tinut evidenta in registrul edx, a carui valoare o compar mereu cu 
+valoarea celui de-al 2 lea parametru.
+	Daca aceste 2 valori sunt egale, atunci ies dint functie.
+	Daca cele 2 valori nu sunt egale, atunci parcurg octet cu octet numarul 1, incepand de la octetul cel mai semnificativ pana la cel mai
+nesemnficiativ si fiecare octet il shiftez la stanga, dar avand grija la cazul in care octetul mai nesemnificativ decat octetul curent are cel
+mai semnificativ bit ega cu "1", caz in care acel 1 trece in locul celui mai nesemnificativ bit din octetul curent.
+	Pentru a verifica acest caz, am mutat in registrul de "al" valoarea octetului mai putin semnificativ si am efectuat operatia de "si" logic
+cu numaru "0x80", care corespunde in binar cu 10000000, iar daca rezultatul acesta era diferit de 0, atunci cel mai semnificativ bit era 1, 
+iar pentru a-l muta pe octetul curent, am adunat 1 la octetul curent.
+	Dupa ce am parcurs toti octetii numarului( registrul ecx imi da pozitia octetului curent) compar daca am shiftat de cate ori era necesar,
+iar daca nu reiau procesul descris mai sus.
+	Daca am shiftat toti octetii numarului verific daca am mai multi octeti decat aveam initial, caz in care trebuie sa maresc dimensiunea
+rezultatului.
+	Pentru acest lucru verific daca cel mai semnificativ bit al celui mai semnificativ octet este 1, caz in care maresc dimensiunea numarului.
+	Acest lucru il verifica efectuand operatia de "si" logic cu numarui "0x80", iar daca rezulatul e diferit de 0 maresc dimensiunea si
+reiau procesul de shiftare cu inca o pozitie, altfel daor reiau procesul de shiftare cu inca o pozitie.
+
+
+4. Implementarea shiftarii la dreapta cu "n" pozitii:
+
+	Pentru implementarea shiftarii la dreapta cu "n" pozitii shiftez de "n" ori la dreapta cu cate o pozitie fiecare octet al numarului, iar
+la final modific dimensiunea rezultatului, o micsorez daca este cazul.
+	Pentru a contoriza de cate ori am shiftat la reapta numarul am tinut evidenta in registrul edx, a carui valoare o compar mereu cu
+valoarea celui de-al doilea parametru.
+	Daca aceste 2 valori sunt egale, atunci ies din funcite.
+	Daca cele 2 valori nu sunt egale, atunci parcur octetii numarului 1, de la cel mai nesemnificativ pana la cel mai semnificativ si ii
+shiftez pe fiecare la dreapta cu cate o pozitie, dar avand grija la cazul cand cel mai nesemnificativ bit al octetului mai semnificativ decat
+octetul curent este "1", caz in care acel "1" va deveni cel mai semnificativ bit al octetlui curent.
+	Pentru a verifica acest lucru efectuez operatia de "si" logic intre octetul mai semnificativ decat octetul curent si numarul "0x1", iar
+daca rezultatul este diferit de 0, atunci acel bit este "1", iar pentru a-l pune in octetul curent, efectuez operatia de "or" loic intre
+octetul curent si numarul "0x80".
+	Dupa ce am parcurs toti octetii numarului, verific daca sa redimensionez, sa micsorez lungimea acestuia.
+	Pentru a verifica micsorarea lungimii, verific daca dupa ce am parcurs toti octetii si i-am shiftat cu cate o pozitie la drapta,
+cel mai semnificativ octet este 0, caz in care mcsorez numarul de octeti din rezultat.
+	Reiau procesul de shiftare al tuturor octetilor la drapta pana cand am shiftat cat era nevoie.
+
+
+5. Implementarea adunarii a 2 numere:
+
+	Pentru implementarea adunarii a 2 numere am considerat 2 cazuri de baza: ambele au acelasi semn, caz in care le adun octet cu octet,
+iar la final verific daca trebie sa maresc lungimea rezultatului si nu modific semnul acestuia si cazul in care cele 2 nuemre au semne
+diferite, caz care contine 4 subcazuri: primul e pozitiv si mai mic, primul e pozitiv si mai mare, priumul e negativ si mai mic si primul e
+negativ si mai mare.
+	Pentru tratarea primului caz mare, cand ambele numere au acelasi semn, salvat in registrul eax semnul primului numar, in registrul
+ebx semnul celui de-al 2 lea numar dupa care am efectuat operatia "xor", iar daca rezultatul era 0, atunci cele 2 numere aveau acelasi semn,
+iar daca rezultatul era "0xFFFFFFFF", atunci cele 2 numere aveau semne diferite.
+	Pentru adunarea octet cu octet mi-am pastrat in registrul ecx un carry personal pe care il actualizez in functie de caz, daca apre
+sau nu carry.
+	Parcurg octetii numarului 2 si salvez in registrul al, octetul din numarul 1 si in registrul bl octetul numarului 2, dupa care folosesc
+registrele de 16 biti pentru a aduna cei 2 octeti si carry-ul, dupa care resetez carry-ul, punand 0 in registrul ecx.
+	Dupa ce am adunat octetii si carry-ul verifica daca rezultatul este mai mare decat "0xFF", daca nu incape pe un octet, caz in cazre scad
+"0x100" si setez valoarea carry-ului pe 1.
+	Dupa ce am scazut din rezultat, retinut in registrul ax, numarul "0x100", actualizez octetul ce trebuie pus in rezultat, doar partea
+inferioara, cea retinuta in registrul al.
+	La finalul parcurgerii octetilor delui de-al 2 lea numar verific daca mai am carry caz in care continui sa adun la octetul curent al
+rezultatului, modificand adecvat carry-ul, cat timp carry-ul retinut de mine devine 0.
+	Daca varabila ecx a devenit 0, nu mai am carry si pot verifica o potentiala marire a numarului de octeti din rezultat, prin simpla
+verificare a numarului de octeti parcursi, retinut in registrul edx, cu numarul de octeti din rezultatul initila, iar daca valoarea din registrul
+edx este mai mare atunci incrementez dimensiunea rezultatului.
+	Pentru cazul in care cele 2 numere au semne diferite verific care numar este mai mare si din numarul mai mare il scad pe cel mai mic,
+iar la final pun semnul celui mai mare.
+	Pentru a verifica ce numar este mai mare compar numarul de octeti pe care sunt reprezentate cele 2 numere, iar cel care e reprezentat
+pe mai multi octeti este mai mare.
+	Daca cele 2 numere au numar egal de octeti compar octet cu octet, pornind de la cel mai semnificativ catre cel mai semnificativ si
+unde am gasit un octet mai mare, numarul care contine acel octet este mai mare.
+	Daca am epuizat toti octetii, am ajuns ca valoarea din registrul edx sa fie mai mica decat 0, atunci cele 2 numere sunt egale si
+modific rezultatul astfel: setez semnul ca pozitiv( 0 nu are semn deci nu las minus), setez lungimea rezultatului pe "1", oar primul octet, cel
+mai nesemnificativ il fac 0 si ies din functie.
+	Dupa ce am gasit numarul mai mare, pun rezultat semnul acestuia si parcurg octet cu octet si efectuez diferenta dintre octetii numarului
+mai mare si octetii numarului mai mic.
+
+
+6. Implemenatrea inmultirii a 2 numere:
+
+	Pentru implemenatrea inmultiri a 2 numere am definit in sectiunea de date un vector de 300 de octeti, a carui octeti au fost initializati
+cu 0, precum si alte 2 variabile "mycarry", "transport" si "inmultitor" initializate initial cu 0, deoarece nu imi ajungeau registrele.
+	Am memorat in registrul edx, indicele octetului din numarul al 2 lea, iar in registrurl ecx indicele octetului din primul numar.
+	Am parcurs octetii numarului 2 si in registrul bx am adunat valorea transportului si a carry-ului pe care le aveam inainte de a efectua
+inmultirea, dupa care am resetat aceste 2 variabile punand 0 in ele.
+	Apoi adun in registrul bx si valoarea care exista in octetul din variabila rezultatul de pe pozitia curenta.
+	Am folosit regeistre pe 16 biti pentru a aduna numere pe 8 biti, deoarece la adunare acestea pot depasi un octet
+	Am mutat in registrul al, valoarea octetului de pe pozitia curenta a numarului 1 si dupa aceea am inmultit octetul curent din numarul 2
+cu octetul curent din numarul 1, rezultat care este memorat in registrul al.
+	Am adunat la variabila "transport" valaorea din registrul ah, acolo se pastreaza transportul, dupa care pentru a scapa de partea
+superioara am efectuat operatia de "si" logic cu numarul "0xFF" si adun partea inferioara in registrul bx.
+	Mut valoarea din registrul bx in ax, dupa care efectuez operatia de "si" logic a valorii din registrul ax cu numarul "0xFF00" pentru
+a vedea daca valoarea din registrul bx incape pe un octet.
+	Daca registrul bx nu incape pe un octet retin in registrul bl, partea inferioara, actualizez valoarea din avariabila "mycarry".
+	Dupa ce am terminat de parcurs octetii din nuamrul 1 verific la final daca mai am carry si tranpsort si  verific daca aceasta suma
+incape pe un octet, iar daca nu partea inferioara o pun la octetul aflat pe pozitia dintre suma dintre valorile registrelor ecx si edx, iar daca
+mai ramane un carry dupa adun "1" la acea pozitie plus "1".
+	Reiau procesul descris mai sus, dar cu cotetul urmator al numarului 2.
+	La final aflu lungimea rezultatului, verificand daca pe pozitia "p = lungime1 + lungime2 + 1" valoarea octetului e 0, atunci lungimea
+e "p", altfel lungimea e "p - 1".
+	Mut octetii din variabila rezultat in octetii numarului 1 si ies din functie.
+	
+	

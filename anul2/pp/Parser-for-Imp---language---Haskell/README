@@ -1,0 +1,87 @@
+	/* PLACINTA ALEXANDRU - 324CB - FISIER README */
+
+
+	0. Implementarea realizata:
+		
+		Am folosit numai inputurile cu TDA-uri, nu am implementat si parser-ul.
+
+	1. Functii aditionale folosite:
+
+			In implementarea temei am mai implemntat cateva functii ajutatoare:
+				
+				1. findVariableValue :: (VariableMap Int) -> String -> Either String Int
+
+					Primeste o mapa de variabile si numele unei variabile, iar pe baza acestor 2 parametri produce valoarea
+				acelei variabile, sau eroare daca varabila nu este declarata.
+					Pentru implementare am folosit mecanismul de pattern matching, astfel ca daca se cauta o valaore pentru o variabila in lista
+				vida, atunci variabila era nedclarata, ea neintalnindu-se in acea mapa de variabile.
+					Daca se cauta o varibila intr-o lista nevida, atunci veirificam inceputlui listei, iar daca acea pereche avea ca prim element numele
+				variabilei, returnam chiar valoarea celui de-al doilea element, altfel cautam in restul listei			
+
+
+				2. evaluateExpression :: (VariableMap Int) -> Expr -> Either String Int
+					
+					Primeste o mapa de variabile existenta pana la acel moment, folosita pentru a culege valorile variabilelor,
+				o expresie si produce rezultatul in urma evaluarii acesteia.
+					Pentru implementare am folosit keyword-ul case pentru a sti ce caz al expesiei am de analizat, iar pentru fiecare tip de
+				expresie am efectuat cate o implementare, avand grija ca daca evluarea unei subexpresii produce o eroare, acea eroare se va propaga ca
+				rezultat al acelei expresii.
+					Daca nu se produce nicio eroare in evaluarea unei vreunei subexpresii atunci pentru fiecare expresie in parte efectuez operatiile specifice: adunare,
+				inmultire, scadere, comparare de egalitate sau comparare de mai mic.
+
+			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			!!		OBSERVATIE: PRIN CONVENTIE, DEOARECE ACEASTA FUNCTIE TREBUIA SA INTOARCA UN INT SAU O EROARE, AM ALES CA EVALUAREA PROGRAMELOR CARE VERIFICAU EGALITATEA!!
+			!!	SAU DACA O VALOARE ESTE MAI MICA DECAT ALTA SA PRODUCA CA REZULTAT VALOAREA 1 IN CAZ DE ADEVAR SI -1 IN CAZ DE NEADEVAR.                                    !!   
+			!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+				
+				3. evaluateForBody :: (VariableMap Int) -> Prog -> Either (Either String Int) (VariableMap Int)
+
+					Primeste o mapa de variabile un program ( din implementarea folosind mecanismul de pattern matching am folosit numari constructorul pentru un program FOR, deoarece
+				acesta era mai lung de evaluat, trebuind sa eveluez mai multe componente).
+					Aceasta procedura evalueaza corpul unui program de tip FOR, abia dupa ce m-am asigurat ca evaluarea asignment-ului 1 nu produce o eroare ci o noua mapa de variabile
+				pe care o voi folosi in evaluarea celorlalte program de programul mare.
+					Astfel, pentru evaluarea unui program analizez expresia, iar daca aceasta nu produce eroare, iar valoarea este 1, se satisface conditia de intrare in FOR, atunci evaluez corpul, iar
+				la final evaluez asignment-ul 2, iar daca nici acela nu produce eroare, repelez aceasta procedura cu exact aceeasi parametrii, aceasta oprindu-se cand evaluearea expresiei produce un rezultat
+				-1, adica conditia de intrare in FOR devine falsa.
+
+				
+				4. uniqueInsert :: (VariableMap Int) -> (String, Int) -> (VariableMap Int)
+
+					Primeste o mapa de variabile, o pereche (String, Int) care reprezinta noua valoarea a unei variabile deja existente, sau o valoare unica si realizeaza inserarea unica in acea mapa
+				de variabile. Am folosit aceasta procedura pentru a num retine in mapa perechi ce aveau acelasi nume de variabila si valori diferite, evitand astfel supraaglomerarea mapei de variabile.
+					Pentru implementare am folsoit mecanismul de pattern matching, astfel:
+						- daca inseram intr-o lista vida, atunci acea variabila era una noua in mapa de variabile, ea nefiind intalnita anterior.
+						- daca inseram intr-o lista nevida de perechi ma uitam la inceputlui listei, si vedeam daca are acelasi nume de variabila, iar daca avea inseram noua pereche si cea veche era scoasa, iar
+				daca nu avea atunci inseram acel inceput de lista in rezultatul inserarii noii perechi in restul listei.
+
+
+				5. evaluateProgram :: (VariableMap Int) -> Prog -> Either (Either String Int) (VariableMap Int)
+
+					Primeste o mapa de variabile, un program si evalueaza acel program. Evaluarea produce o valoare, o mapa de variabile, daca s-au intalnit atribuiri in evaluarea subprogramelor,
+				sau o eroare, daca in evaluarea subprogramelor s-a intalnit vreo eroare, aceasta trebuind sa se propage, fiind rezultatelor programelor ce include programul care a dat eroare.
+					Pentru a retine cele 3 posibilitati de returnare a erorii, valorii de finale de return sau a mapei de variabile, acestea fiind singurele 3 psoibilitati care puteau rezulta in urma
+				evaluarii unui program, am ales ca functia ce evalueaza un program implementata de mine sa returneze (Either (Either String Int) (VariableMap Int)), unde partea din stanga era reprezentata
+				de posibilitatea unei erori sau o valoare de retur, iar partea din dreapta era mapa de variabile actualizata.
+
+				6. evalAdt :: Prog -> Either String Int
+
+					Primeste un program si returneaza rezultatul in urma evaluarii programului dat ca parametru.
+					Aceasta functie apeleaza functia implementata de mine pentru evaluarea unui program, pornind de la acel program si de la o mapa de variabile vida.
+					La final vad ce caz de rezultat produce functia mea de evaluare:
+						- mapa de variabile -> nu s-a intalnit return in tot programul
+						- valaoare -> s-a intalnit return, acesta fiind rezultatul final
+						- eroare -> caz in care acesta e si rezultatul final al programului
+
+
+	2. Pastrarea celor 3 psoibilitati de rezultat in cazul evaluarii unui program:
+
+				Evaluarea unui program poate produce 3 rezultate: eraore, valaore de return sau mapa de variabile actualizata.
+				Pentru a putea face distinctia intre aceste 3 tipuri de rezultate, functia implementata de mine pentru a evalua un program returneaza un obiect de tipul
+			(Either (Either String Int) (VariableMap Int)), unde in partea stanga a acestui obiect este un obiect (Either String Int) pentru posibilitatea unei erori sau valori de retur,
+			daca dau de aceste lucruri nu mai evaluez programele urmatoare, iar in partea dreapta este o mapa de variabile.
+				Daca in evaluarea unui program se returneaza o mapa de variabile, atunci in acel s-au intamplat urmatoarele lucruri:
+					- nu a fost detectata nicio eroare
+					- nu a fost detectat niciun return
+					- posibile deferite asignari, care trebuiai acestea memorate, iar din acest motiv am si posibilitatea returnarii mapei de variabile
+				Daca in evaluarea programului mare rezultatul este mapa finala de variabile, atunci nu s-a intalnit vreun return in timpul evaluarii pe ramurile programului. 		

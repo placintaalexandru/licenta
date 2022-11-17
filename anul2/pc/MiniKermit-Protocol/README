@@ -1,0 +1,104 @@
+	/* PLACINTA ALEXANDRU - 324CB - FISIER README */
+
+
+		1. Structuri folosite:
+
+			Pentru implementarea temei am creat 2 structuri de date aditionale ce descriu un pachet Kermit, aceast numindu-se MiniKermitPacket, iar
+		cealalta structura descrie campul data dintr-un pachet de tip S, send_inti, aceasta numindu-se PacketSData.
+			Am creat aceste structuri pentru a tine mai usor evidenta datelor pe care le citesc, trimit, respectiv primesc, deorece am incercat sa urmaresc
+		urmatorul fir logic al evenimentelor din perspectiva prelucrarii datelor: citesc datele intr-un buffer, pun datele din buffer in pachetul pe care
+		trebuie sa il trimit, pun pachetul in payloadul mesajului ( prin copierea fiecarui camp din pachet in payload-ul mesajului, copiez camp cu camp pentru
+		a evita otetii de padding care apar in structura unui pachet), trimit mesajul, astept TIME milisecunde, iar daca primesc un mesaj in acest interval
+		de timp pun mesajul in pachetul special folosit pentru primire, respectiv trimitere ( tot prin copierea camp cu camp, numai ca de aceasta data sar
+		octetii anteriori din payload-ul mesajului primit prin adunarea unui numar preferential la payloadul mesajului).
+			Daca nu primesc mesaj in intervalul acesat de TIME milisecunde trimit acelasi mesaj, iar daca s-a primit si a 3-a oraa timeout opresc executia
+		ambelor procese (sender si receiver), ar mai intai de toate eliberez resursele folosite de cei 2 participanti la tranzactie ( transmitere).
+
+		
+		2. Evitarea introducerii mai multor octetii decat cei necesari  in campul payload din structura unui mesaj:
+
+			Deoarece campul data din structura mea pachet este alocat static, avand dimensiunea maxima MAXL, pentru a evita punerea in payload a mai multor octeti decat
+		strictul necesr am construit campul len din structura pachetului pe baza lungimii campului data.
+			Un pachet are 7 octeti (5 camputi de dimensiune un octet si acel check care are dimensiunea 2 octeti), air apoi mai este si campul data.
+			Deoarece in campul len nu se iau in calcul primii 2 octeti, SOH si LEN in sine, lungimea pachetului va fi chair 5 + lungimea campului data, care este data de valoare intoarsa
+		de functia read ce da numarul de octeti cititi din fisierul respectiv, 0 (daca este s-a ajuns la EOF) si -1 in caz de eroare.
+			La copiera in payload-ul mesajul eu verific pur si simplu daca valoarea din campul len a mesajului este mai mare decat 5, iar in acest caz copiez ce se afla in campul data un numar de
+		octeti egal cu valoarea campului len din pachet minus 5.
+			Lungimea finala e mesajului va fi 7 + lungimea campului data, sau 2 + lungime pachet, deoarece aici se iau in calcul si primii 2 octeti.
+			
+
+		3. Functii folosite:
+
+			Pentru imiplementarea am folosit urmatoarele functii:
+
+			- "unsigned short getCRC(MiniKermitPacket *kermitPacket, int lungimeData)":
+
+				Calculeaza codul CRC pentru un pachet, mai intailiniariznad structura copiindu-i toate campurile intr-o zona de date alocata, apoi apelez
+			functia unsigned "short crc16_ccitt(const void *buf, int len)" pe zona aceea de memorie
+
+			- "MiniKermitPacket *creeazaKermitPacket(char type)":
+
+				Creeaza un pachet de tip MiniKermitPacket al carui tip e dat ca parametru.
+
+			- "void modificaPacketD(MiniKermitPacket *kermitPacket, char *data, unsigned int lungimeData, char numarSecventa)":
+
+				Pentru a nu aloca de fiecare data o zona de memorie pentru un pachet de tip Kermit o modific pe cea existenta deja
+			adagand peste valorile vechi ale campurilor noi valori date ca parametru, dar mai intai curat campul data de "ramasitele"
+			anterioare apeland functia memset.
+
+			- "void punePacketDateInMesaj(msg *mesaj, MiniKermitPacket *kermitPacket)":
+
+				Realizeaza punerea in payload-ul mesajului a pachetului dat ca parametru prin copierea camp cu camp, copiind exact cati octeti sunt necesari.
+
+			- "void puneMesajInPacket(MiniKermitPacket *packet, msg *mesaj)":
+
+				Realizeaza inversul, pune din payload-ul mesajului dat ca parametru in pachet prin copierea camp cu camp, verificand daca lungimea mesajului este mai mare decat 7,
+			adica daca am ceva octeti de pus in campul data al pachetului.
+
+			- "void completeazaDataS(PacketSData *dataS, unsigned char maxPacketLength, int secondsToWait)":
+
+				Completeaza o structura data pentru pachetul de tip S, folosind valorile primite ca parametrii, iar celelalte initilizandu-le cu valorile default, definite in "lib.h"
+
+			- "void puneDataSInPacket(MiniKermitPacket *kermiPacket, PacketSData dataTipS)":
+
+				Pune data S intr-un pachet prin copierea camp cu camp si calculeaza codul CRC aferent
+
+			- "int waitForResponse(MiniKermitPacket **vectorPachete, msg *t, msg *r, int timeoutCounter, unsigned char seqNo)":
+				
+				Asteapta in cadrul emitatorului pentru un raspuns, iar daca nu il primeste transmite ultimul mesaj
+
+		4. Desfasurarea firului logic al transmiterii: 
+
+			Dupa ce am analizat modul de desfasurare al actiunilor emitatorului si al receptorului am ajuns la concluzia ca ar trebuie sa fac in felul urmator:
+
+				Emitatorul trimite un mesaj, iar apoi asteapta sa primeasca un raspuns, acest lucru il realizez intr-o bucla infinita:
+					a) Daca nu primeste retransmite acelasi paceht
+					b) Daca primeste ceva:
+						i) Daca numarul de secventa e bun se uita la tipul mesajului: mareste numarul sau de secventa si se uita la tipul mesajului, ACK sau NAK
+							I) Daca e NAK, retrimite pachetul curent, modificandu-i valoarea check, deoarece i se modifica numarul de secventa
+							II) Daca e ACK elibereaza memoria folosita pentru a primi mesajul si iese din bucla de asteptare
+								
+				Receptorul asteapta primirea unui mesaj, acest lucru il realizez intr-o bucla infinita:
+					a) Daca nu primeste nimic, retransmite ultimul mesaj, fara a schimba numarul de secventa
+					b) Daca primeste ceva, analizeaza codurile crc, compara rezultatul functiei crc cu valoarea campului check din pachetul primit: daca rezultatul e croectmaresc numarul de secventa
+						i) Daca nu corespund transmite NAK
+						ii) Daca corespund, ma uita la tipul mesajului ( SEND_INIT, DATA, EOF, EOT) si efectuez operatia specifica si transmit emitatorului un mesaj ACK
+		
+			Pentru cazul de timeout la receptor, retin in variabila "ultimulTip" tipul ultimul mesaj de transmis, iar cand receptorul intampina timeout introduc numarul de secvneta curent si tipul ultimului mesaj de transmis
+		si il retransmit emitatorului, astfel ca acest mesaj va avea aceleasi proprietati ca si ultimul mesaj de transmis, va fi ACK sau NAK, depinzand de ce mesaj s-a trnasmis ultima data.
+			La trimiterea confirmarii emitatorului cosntruiesc valoarea CRC-ului mesajului de transmis din receptor si o verific la primire de catre emitator, iar daca aceasta nu este corecta retrimit mesajul de la emitator.
+			
+	
+		5. Eliberarea memoriei pentru a nu avea leak-uri la finalul transmiterii:
+
+			La finalul unei transmisii nu exista leak-uri de memorie, deaoarece la fiecare pas am avut grija sa eliberez memoria folosita:
+			
+				i) Pentru emitator:
+
+					Atunci cand se primeste o confirmare buna, ACK, eliberez memeoria alocata pentru confirmarea primita si ies din bucla de asteptare.
+					Daca primesc o confiramre negativa, NAK, eliberez memeoria necesara pentru mesajul primit, dar nu ies din bucla de asteptare.
+					Daca primesc o confirmare anteriaora, negativa sau pozitiva, eliberez acea memorie si retransmit.
+
+				ii) Pentru receptor:
+
+					De fiecare data cand primesc un mesaj la receptor, il analizez, iar in functie de tipul sau efetuez operatiile specifice, iar la final eliberez zona de memorie.

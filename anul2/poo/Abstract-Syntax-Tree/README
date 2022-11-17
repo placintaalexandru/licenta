@@ -1,0 +1,30 @@
+
+	PLACINTA ALEXANDRU, 324CB, FISIER README
+
+
+		Pentru implementarea temei am folosit design pattern-ul Visitor, deoarece in abore aveam mai multe tipuri de noduri, depinzand de continutul acestora, si trebuiau fiecare vizitate
+	si in fucntie de tipul de nod vizitat trebuia sa efectuez o anumita operatie, iar acest design pattern permitea acestu lucru.
+		Pe langa design pattern-ul Visitor am mai folosit si Singleton si Factory, deoarece nu aveam nevoie de mai multe obiect de tip ParseTree, spre exemplu, si foloseam un signur obiect de acest tip pe care
+	il curatam la fiecare noua chemare a instantei respective.
+		Am folsoit design pattern-ul Factory, deoarece in functie de un anumit parametru sau conditie a trebuit sa creez un nod, care la baza era TreeNode.
+
+		
+		Pentru implementarea design pattern-ului Vsitor am folosit o interfata Visitor ce are metoda "visit" aplicata fiecarui tip de nod, iar clasa EvaluateVisitor implementeaza interfat visitor, avand in plus cateva functii
+	ajutatare de evaluare a celor 4 operatii: adunare, scadere, inmultire si impartire. Toate nodurile vor implementa interfata Visitable si, implicit, metoda "accept" care accepta vizita.
+		Daca vizitez un nod ce contine operatie vizitez si copiii acestuia, iar apoi evaluez operatia cu cei 2 opranzi pe care ii are acel nod in umra vizitarii copiilor.
+		
+		In clasa Calculator am implementat toate operatiile pe cel 3 tipuri de date, iar in functie de instanta celor 2 operanzi, le fac cast acestora si apelez functia ce descrie operatia nodului respectiv cu cei 2 parametri castati.
+		
+		
+		Pentru implemntarea temei am creat un arbore de parseare, ParseTree, conform algoritmului din resurse, folosind 2 stive, dintre care cea finala era stiva ce continea simbolurile din expresie in ordinea buna pentru
+	a crea un arbore.
+		Pentru a crea arborele, creez mai intai radacina acestuia, iar apoi creez recursvi fiul din dreapta si fiul din stanga, prin apelul recursiv al functiei "build" pentru fiul drept al nodului curent, apoi pentru nodul curent, iar
+	apoi pentru fiul din stanga. Acest apel: fiu drapta, nod curent si fiu stanga este justificat de faptul ca in stiva finala, cea care contine simbolurile expresiei, acestea sunt puse in stiva in ordine inversa, variabilele, iar la fel
+	si simbolurile ce contin operatii, acestea fiind influentate si de gradul lor de prioritate.
+		Daca radacina este nod parametru nu are loc nicio cosntructie, rezultatul fiind chiar in acel nod.
+
+		
+		Pentru evaluarea expresiei folosesc o mapare de la String la Object in care retin variabilele, numele si valorile acestora si pe baza acestei mapari construiesc arborele.
+
+		Pentru parcurgerea unui fisier de intrare am creat clasa MyReader care parcurge fisierul si in functie de tipul liniei, variabila sau expresie, efectueaza comanda acelei linii si retine rezultatele evaluarii expresiilor
+	intr-o lista, iar cu ajutorul clasei MyWriter scriu in fisier acele rezultate.

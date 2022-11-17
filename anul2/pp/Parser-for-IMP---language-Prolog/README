@@ -1,0 +1,98 @@
+		/* PLACINTA ALEXANDRU - 324CB - FISIER README */
+
+
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   	!!!!OBSERVATIE: LA CURS NI S-A EXPLICAT PARSAREA SI NI S-AU DAT CATEVA PREDICATE, INCLUSIV IMPLEMENTAREA ACESTORA, PE CARE LE-AM MAI MODIFICAT PENTRU A REALIZA PARSAREA UNEI EXPRESII.!!!
+	!!!!!!!!!!!!!!!!CEEA CE VREAU SA ZIC ESTE CA AM PLECAT DE LA FUNCTIILE SI INDICATIILE PE CARE DOMNUL PROFESOR NI LE-A DAT LA CURS													   !!!		
+	!!!!!!!!!!!!!!!!PREDICATELE FOLOSITE DIN CEEA CE A DAT DOMNUL PROFESOR LA CURS SUNT: parseME, parseChar, parseTok. RESTUL PREDICATELOR REPREZINTA IMPLEMENTAREA PROPRIE.               !!! 
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+	Pentru implementarea temei am impartit task-ul mare, producerea rezultatului in mai multe subtask-uri care la randul lor au fost impartite in task-uri mai mici.
+	Ierarhia fiin urmatoarea:
+
+		1. Spargerea temeie in subtask-uri reolvate secvential:
+			
+				A) Predicate de parsare:
+
+					A1. Predicate de parsat expresii:
+						
+							A1.1 Predicate de parsat token-uri
+							A1.2 Predicate de aprsat expresi de inmultire
+							A1.3 Predicate de parsat expresii aritmetice: adunare, scadere si inmultire, deoarece se compun din mai multe parsari de expresii de inmultire
+							A1.4 Predicate de parsat expresii de comparatie: mai mic, egal, se compun din expresii aritmetice intre care se afla < sau =
+							A1.5 Predicate de parsat expresii proriu-zise: parsez mai intai o expresie aritmetica, dupa care parsez expresii de comparatie
+					
+					A2. Predicate de parsat programe:
+
+							A2.1 Predicate de parsat body-uri de programe: utile pentru parsarea programelor de tip for, if, dar si pentru a initia parsarea mare,
+									cea a intregului program scris in fisier. Am considerat ca un program este compus dintr-o lista de programe, astfel, la crearea
+									unui program de tip if sau for, corpul acestora reprezinta o lista programe pe care o evaluez element cu element atata timp ca vreun program
+									din acea lista nu produce vreo eroare de varibila nedeclarata, sau vreu assert care da fail sau nu se produce vreo valoare de return.
+							A2.2 Predicate de parsat programe concrete: Un program concret, in conceptia mea atunci cand am realizat tema reprezinta unul din programele care alcatuiesc
+									programul mare pe care trebuie sa il evaluez. Aceste programe concrete sunt: assert, asign, return, if si for.
+									In aceasta sectiune de predicate, scriu parsarea concreta pentru fiecare tip de program, care este structura de parsare pentru fiecare.
+									Daca nicio clauza pentru parsarea vreunui program concret nu este satisfacuta la un moment dat, atunci parsarea esueaza, rezultatul fiind acela de
+									eroare de semantica, deoarece programul nu este corect din punct de vedere sintactic
+							A2.3 Predicate de parsat programe prorpiu-zise: Acesta este un singur predicat care le foloseste pe cele descris in sectiunea de parsare a programelor
+									concrete. La un moment dat in timpul parsarii se incearca satisfacerea, o singura data prin utilizarea operatorului "!", a unei clauze de a parsa un
+									program concret, adica eu in fiecare moment din timpul parsarii incerc sa parsez unul din programele de tip asign, assert, return, if sau for.
+							
+
+			B) Predicate de evaluare:
+
+					B1. Predicate de evaluat expresii:
+
+							B1.1 Predicate de gasit valorile variabilelor in mapa de variabile
+							B1.3 Predicate de evaluat expresii propriu-zise: folosite pentru a produce un rezultatul evaluarii unei expresii.
+									Acest rezultat poate fi o valoare numerica sau o eroare de folosire a unei variabile neinitializate.
+						
+					B2. Predicate de evaluat programe propriu-zise:
+							
+							B2.1 Predicate de inserare unica in mapa de variabile
+							B2.2 Predicate de evaluat expresii
+							B2.3 Precate de evaluat body-ul unui program de tip for, deoarece acesta se evalueaza de un numar diferit de ori, cat timp conditia din for este
+									adevarat, in timp ce celelalte programe se evaluau o singura data, atunci cand se intalneau in parcurgerea efectiva a unei liste de variabile dintr-un
+									anumit context. Contextul l-am reprezentat ca fiind programele dintre o pereche de acolade: dintre '{' si '}'.
+							B2.4 Precate de evaluat programe propriu-zise: cum reprezentarea mea pentru un program consta intr-o lista de programe, evaluarea programului mare consta
+									in evaluarea fiecarui program component atata timp cat nu are loc un assert fail, sau folosirea unei variabile neinstantiate sau nuse da peste vreun return.
+
+
+
+		2. Implementarea fiecarui subtask:
+
+				Pentru a parsa o expresie, a trebui sa impart parsare in parsarea in parsarea astfel: parsarea unei expresii de inmultire ( deoarece inmultirea leaga mai strans decat adunarea sau scaderea),
+					parsarea unei expresii aritmetice ( aceasta poate fi parsarea unei inmultire, adunari sau scadere), parsarea unei expresii de comparatie si aici tinand cont de precedenta, deoarece
+					conform enuntului == leaga cel mai slab, astfel operatorul < avand precedenta.
+
+				In implementare am tinut cont de sfaturile date la curs de catre domnul profesor, astfel ca majoritate procedurilor au aritate cel putin 3, pentru a return obiectul parsat si locul din lista
+					de unde se va relua parsarea.
+				Predicatele cu aritate 4 de parsare sunt predicate auxiliare, deoarece in ele retin ce s-a parsat pana la un moment dat, in variabila al carui nume este TN ( TILL NOW). Astfel la intalnirea unui
+					anumit operator, functia de parasare se va reapela, dar variabila TN se va modifica, devenind un TN' care va contine o expresie ce se foloseste de rezultatul parsarii retinut de TN.
+				La intalnirea unei parantele de inchidere, ')', sau ';' parsarea expresiei inceteaza si rezultatul expresiei este chiar ce s-a parsat pana la acel moment, ceea ce este retinut in variabila TN la
+					acel moment.
+				Parsarea unei expresii de inmultire poate fi parsarea unei inmultire prorpiu-zise sau parsarea unui singur token, daca am 2 adunari sau scadere sau adunarea si scadere sau invers una dupa alta si
+					nu am o operatie de inmultire efectiv, deorece adunarea si scaderea seefectueaza in ordinea in care sunt scrise, eu le parsez in ordinea in care le intalnesc.
+				Pentru a parsa un program am implementat predicte pentru a parsa fiecare din cele 5 tipuri de programel, deoarece fiecare avea semantica lui unica.
+				Prin implementarea unui predicat pentru a parsa fiecare program in parte ma refer la faptul ca urmez token-urile care compun fiecare tip de program si le parsez pe acestea in ordinea in care
+					ele apar in compunerea programului.
+				Parsarea progrmaului se va compune din parsarea unuia din cele 5 programe, astfle ca acest predicat incearca satisfacerea unuia din cele 5 scopuri.
+
+				Pentru a evalua programale am aplicat strategia de evaluare de la tema 2: am considerat o lista de perecehi, simulata cu predicate, in care primul element e numele variabilei si cel de-al doilea
+					reprezinta valoarea acesteia, am folosit o functie de inserare unica in lista de perechi si returnez la fiecare pas lista cu elemente unice, deoarece am zis ca pentru foarte multe
+					evaluari lista ar deveni foarte mare, iar cautarea valorii unei variabile ar lua foarte mult timp.
+				Pentru fiecare caz in evaluare am scris cate un preeicat, daca un pas din evaluarea unui program esua, daca reusea si evaluarea producea o valaorea atunci ma opream, iar dca mi se returna o
+					noua mapa de variabile continui evaluarea, analizand operatiile folosind mapa returnata de evaluarea acelui program.
+				
+				Pentru cele 2 programe mai complexe am avut de scris mai multe clauze, deoarece pentru a evalua corpul unor astfel de programe trebuia sa evaluez urmtaorele:
+					Condtia care putea produce sau nu eroare, iar in caz de fara eraore verificam rezultatul intors care putea fi o mapa nou, o valoare de return sau o eroarea.
+				Pentru programul de tip for, trebuia sa evaluez asignment-ul initial care putea sau nu sa produca eraore, apoi conditia, care putea sa fie adevarata sau nu, apoi corpul,
+					iar cat timp condititia era adevarata evaluam corpul for-ului si actualizam mapa de variabile, pentru acest lucru am folosit o functie separata care evalua body-ul unui program de tip for.
+
+
+		3. Timpul de executie: 
+
+				Pentru ultimul test, tesul 15, evaluarea ia ceva mai mult, restul testelor trecand aproape instant.
+				Mentionez acest lucru, deoarece nu doresc sa fie vreo problema la evaluare.
+
+

@@ -1,0 +1,147 @@
+	/* PLACINTA ALEXANDRU - 324CB - FISIER README */
+
+	
+	0. OBSERVATIE: Am plecat de la scheletul laboratorului 8, cel cu TCP si 
+			Multiplexare, de la care am adaugat anumite facilitati 
+			pentru a indeplini functionalitatea temei 3.
+
+
+	1. Ideea de implementare:
+
+		Pentru implementarea temei am pornit prin a-mi realiza niste
+	obiective care prin realizarea fiecaruia ma duceau cu un pas mai aproape
+	de realizarea temei. Aceaste sunt descrise mai jos.
+
+	Firul "narativ" al temei este urmatorul:
+		a. proxy primeste request
+		b. proxy extrage din request hostname si port
+		c. interoghez cache-ul pentru a vedea daca pot prelua de acolo,
+			prin deschiderea fisierului aferent request-ului
+		d. daca nu pot prelua, stabilesc o conexiune TCP cu server-ul
+		e. dupa stabilirea conexiunii trimit cererea nealterata
+		f. vad daca trebuie sa scriu in cache raspunsul
+		g. pe masura ce primesc raspunsurile le scri in fisier,
+			daca trebuie, si le dau inapoi la browser
+		h. inchid fisierul deschis pentru scriere si conexiunea cu browser-ul
+
+	2. Detalii de implementare:
+
+		Implementarea a fost realizata folosind API-ul din cadrul
+	laboratorului 8, cel cu TCP si Multiplexare, dar si folosind
+	cunsotintele din cadrul laboratorului 11, cel cu HTTP.
+		Pentru a face proxy-ul sa functioneze si ca un client, la fiecare
+	cerere primita cream un socket TCP cu server-ul in care scriam request-ul
+	primit de proxy de la browser.
+		Pe acest socket comunica proxy-ul doar cu server-ul si deserveste
+	exclusiv forward-arii request-ului catre server si al raspunsului
+	server-ului catre proy, pentru ca mai apoi, pe socket-ul privat dintre
+	proxy si browser, sa trimit raspunsul mai departe, deoarece in lantul
+	browser-proxy, proxy-ul poarta rol de server.
+		
+		Pentru completarea task-ului am avut nevoie de fucntiile
+	care fac urmatoarele lucruri:
+		a. extrag hostname-ul din request
+		b. extrag portul din request, iar daca nu exista ii dau valoarea 80
+		c. creeaza un nume pt fisier de cache
+		d. realizarea ununi reques: browser -> proxy, proxy -> server, server -> proxy si proxy -> browser
+
+		
+	3. Functii implementate:
+
+		Urmatoarele functii sunt implementarile functiilor enumerate mai sus:
+
+	a. Functia "char *getAdressName(char *url)":
+
+		Functie care pe baza unui request extrage numele hostului
+	pentru ca mai apoi sa fie folosit ca argument functiei
+	gethostbyname pentru a obtine adresa IP a server-ului
+	Pentru implementare am considerat 5 cazuri, cand am urmatoarele:
+	"GET http://", "GET (http://)www.", "GET .. \r\nHOst: numeServer",
+	"GET (fara http://www.)numeServer" si "POST ...."
+	Cei de mai sus au fost delimitatori principali folositi de mine,
+	deoarece aparitia/disparitia lor imi pot indica o adresa de inceput
+	in calcularea adresei server-ului.
+	In functie de fiecare caz, retin o adresa de inceput, de unde voi copia
+	numele si o lungime a acestuia, cat voi copia incepand de la acea adresa.
+	Pentru a sti cand sa ma opresc iterez prin request pana cand caracterul de
+	la acea adresa va fi unul din urmataorele: ':', '\r', '\n', '\0' sau '/', in
+	functie de cazul in care ma aflu cu request-ul.
+	Pentru cazul cu "http://" acesta va disparea.
+
+	
+	b. Functia "int getPort(char *url)":
+
+		Functie care pe baza unui request creeaza numarul de port aferent,
+	deoarece unele request-ueimai pot avea asa zise porturi proprii
+	specificate.
+	Pentru a realiza acest lucru tot ceea ce fac este sa caut pe prima
+	linie, pana la prima perecehe \r\n, un subsir care incepe cu ':' si
+	are dupa el o cifra, iar apoi de la adresa acelei cifre culeg subsirul
+	pana cand caracterul de la adresa curenta este '/', atunci incepe
+	adresa resursei dorite.
+	Cautarea o realizez doar pe prima linie, deoarece in tema a fost
+	specificat ca nu se va da portul prin parametrul HOST, deci singurul
+	loc unde poate aparea este pe prima linie.
+	In aceasta parcurgere retin adresa de inceput de unde voi copia, si
+	construiesc lungimea IP-ului ca string, dupa care la final copiez
+	acel subsir intr-un buffer si aplic functia atoi.
+
+
+	c. Functia "char *createFileName(char *url)":
+		
+		Functie care pe baza unui request creeaza numele fisierului de cache.
+	Pentru crearea fisierului de cache am gandit urmatorul lucru, pentru a
+	putea distinge requsturile cu nume diferite, dar si request-urile cu
+	acelasi nume, dar care puteau avea porturi diferite: creez un fisier al
+	carui nume este format din prefixul "FILE_NO_" apoi suma caracterelor
+	din request, fie ca e relativ ( iau daor adresa paginii in considerare),
+	fie ca e absolut ( iau si hostname in calcul) si la aceasta suma adaug
+	valaorea caracterelor, iar la final adaug si "_" urmat de numarul
+	portului si ".cache", pentru a putea sa sterg toate fisierele cache
+	existente pana la acel moment la inceperea rularii proxy-ului
+
+	
+	d. Functia "int myConnect(char *url, int socket)":
+
+		Functie care pe baza unui request si a unui socket,
+	creeaza o conexiune TCP cu server-ul pentru care este
+	request-ul respectiv si intoarce rezultatul in urma
+	conexiunii
+	Pentru implementare am completat campurile variabilei
+	"serverAdress" prin folosirea numelui hostului din request,
+	dar si a portului
+	La final intorc rezultatul intors de primitiva connect
+	aplicat pe socket-ul primit ca parametru si variabila
+	"serverAdress".
+
+	
+	e. Functia "bool hasCache(char *fileName)":
+
+		Functie care determina daca un fisier cu numele
+	precizat exista.
+	Pentru implementarea functie am folosit functia stat din
+	biblioteca <sys/stst.h> care preia informatii despre un fisier
+	si le introduce in structura de tip stat
+
+
+	f. Functia "makeRequest(int fromSocket, char *url, int octetiPrimiti)":
+
+		Functie care realizeaza un request pe care il primeste
+	prin socket-ul primit ca parametru, iar pentru fiecare
+	request realizeaza raspunsul fie prin interogarea cache-ului,
+	fie prin interogarea server-ului.
+	Pentru implementare am cautat mai intai sa vad daca
+	cererea mea se afla in cache prin a intreba daca fisierul
+	aferent request-ului exista deja, caz in care nu creez niciun
+	socket cu server-ul ci doar citesc din fisier pana la epuizarea
+	acestuia, iar la fiecare citire scriu pe socket pentru a trimite
+	browser-ului.
+	Daca fisierul aferent request-ului nu este creat, atunci daca
+	trebuie sa cache-uiesc acel request, deoarece unele request-uri
+	nu trebuiesc cache-uite, spre exemplu cele cu "POST", creez
+	fisierul aferent request-ului cu numele descris in documentatia
+	functiei "createFileName".
+	Dupa ce am realizat conexiunea dintre proxy si serve, trimit
+	request-ul primit de proxy de la browser server-ului, iar apoi
+	cat timp primesc raspuns, trimit inapoi la browser si scriu, daca
+	trebuie, si in fisierul de cache aferent request-ului.
